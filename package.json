@@ -7,13 +7,28 @@
   "scripts": {
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "cdk": "cdk",
-    "test": "jest"
+    "test": "jest",
+    "tail:processor": "aws logs tail '/aws/lambda/DwchatbotStack-rewardsprocessor3AA04EB2-icpqaBKAntiu' --follow",
+    "tail:api": "aws logs tail '/aws/lambda/DwchatbotStack-APILambda7D19CDDA-bVLNXkln9XKb' --follow",
+    "listen": "aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/080513178138/dwNotifications --attribute-names All --message-attribute-names All --max-number-of-messages 2"
   },
   "devDependencies": {
     "aws-cdk": "2.26.0",
     "jest": "^27.5.1"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigateway": "^1.132.0",
+    "@aws-cdk/aws-appsync": "^1.132.0",
+    "@aws-cdk/aws-dynamodb": "^1.132.0",
+    "@aws-cdk/aws-events": "1.132.0",
+    "@aws-cdk/aws-events-targets": "1.132.0",
+    "@aws-cdk/aws-eventschemas": "1.132.0",
+    "@aws-cdk/aws-iam": "^1.132.0",
+    "@aws-cdk/aws-lambda": "^1.132.0",
+    "@aws-cdk/aws-s3": "^1.132.0",
+    "@aws-cdk/aws-s3-deployment": "1.132.0",
+    "@aws-cdk/aws-sns": "^1.132.0",
+    "@aws-cdk/core": "1.132.0",
     "aws-cdk-lib": "2.26.0",
     "constructs": "^10.0.0"
   }

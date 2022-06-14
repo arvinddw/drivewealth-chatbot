@@ -1,13 +1,13 @@
-// const cdk = require('aws-cdk-lib');
-// const { Template } = require('aws-cdk-lib/assertions');
-// const Dwchatbot = require('../lib/dwchatbot-stack');
+// const { Template } = require('@aws-cdk/assertions');
+// const cdk = require('@aws-cdk/core');
+// const Invest = require('../lib/invest-stack');
 
 // example test. To run these tests, uncomment this file along with the
-// example resource in lib/dwchatbot-stack.js
+// example resource in lib/invest-stack.js
 test('SQS Queue Created', () => {
 //   const app = new cdk.App();
 //   // WHEN
-//   const stack = new Dwchatbot.DwchatbotStack(app, 'MyTestStack');
+//   const stack = new Invest.InvestStack(app, 'MyTestStack');
 //   // THEN
 //   const template = Template.fromStack(stack);
 
@@ -15,3 +15,4 @@ test('SQS Queue Created', () => {
 //     VisibilityTimeout: 300
 //   });
 });
+
