@@ -1,0 +1,256 @@
+{
+    "openapi": "3.0.0",
+    "x-stoplight": {
+      "id": "tqnv1hzd55t7i"
+    },
+    "info": {
+      "title": "baskets",
+      "version": "1.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:3000"
+      }
+    ],
+    "paths": {
+      "/baskets/{basketID}": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "basketID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "get": {
+          "summary": "Get Basket Info by BasketID",
+          "tags": [],
+          "responses": {
+            "200": {
+              "description": "User Found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/User"
+                  },
+                  "examples": {
+                    "Get User Alice Smith": {
+                      "value": {
+                        "id": 142,
+                        "firstName": "Alice",
+                        "lastName": "Smith",
+                        "email": "alice.smith@gmail.com",
+                        "dateOfBirth": "1997-10-31",
+                        "emailVerified": true,
+                        "signUpDate": "2019-08-24"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User Not Found"
+            },
+            "": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Basket"
+                  }
+                }
+              },
+              "description": "The Basket requested"
+            }
+          },
+          "operationId": "get-baskets-basketID",
+          "description": "Retrieve the information of the basket with the matching user basketID."
+        }
+      },
+      "/baskets/{basketID}/place_orders": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "basketID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "post": {
+          "summary": "",
+          "operationId": "post-baskets-basketID-place_orders",
+          "responses": {
+            "200": {
+              "description": "All "
+            }
+          },
+          "description": "Flushes the entire basket by cosolidating the transfers and placing a single order for each symbol."
+        }
+      },
+      "/baskets": {
+        "post": {
+          "summary": "Create New User",
+          "operationId": "post-user",
+          "responses": {
+            "200": {
+              "description": "User Created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/User"
+                  },
+                  "examples": {
+                    "New User Bob Fellow": {
+                      "value": {
+                        "id": 12,
+                        "firstName": "Bob",
+                        "lastName": "Fellow",
+                        "email": "bob.fellow@gmail.com",
+                        "dateOfBirth": "1996-08-24",
+                        "emailVerified": false,
+                        "createDate": "2020-11-18"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Missing Required Information"
+            },
+            "409": {
+              "description": "Email Already Taken"
+            }
+          },
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasketRequest"
+                },
+                "examples": {
+                  "Create User Bob Fellow": {
+                    "value": {
+                      "firstName": "Bob",
+                      "lastName": "Fellow",
+                      "email": "bob.fellow@gmail.com",
+                      "dateOfBirth": "1996-08-24"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Post the necessary fields for the API to create a new user."
+          },
+          "description": "Create a new Basket. A Basket is a store for orders which then get batched together and executed according to the Basket's configuration."
+        },
+        "parameters": []
+      }
+    },
+    "components": {
+      "schemas": {
+        "Basket": {
+          "title": "Basket",
+          "type": "object",
+          "description": "",
+          "x-examples": {
+            "Alice Smith": {
+              "id": 142,
+              "firstName": "Alice",
+              "lastName": "Smith",
+              "email": "alice.smith@gmail.com",
+              "dateOfBirth": "1997-10-31",
+              "emailVerified": true,
+              "signUpDate": "2019-08-24"
+            }
+          },
+          "properties": {
+            "basketID": {
+              "type": "number",
+              "description": "Unique identifier for the given Basket"
+            },
+            "flushTimeout": {
+              "type": "string",
+              "description": "The time until which the orders will be batched. After this timeout, all orders in the Basket will be sent to Market."
+            },
+            "maxBucketValue": {
+              "type": "string",
+              "description": "The maximum monetary value of shares in the Basket. Beyond this value, all shares in the Basket will be sent to Market. When this happens the flush timer will be reset."
+            }
+          },
+          "required": [
+            "basketID",
+            "flushTimeout",
+            "maxBucketValue"
+          ]
+        },
+        "BasketCreateRequest": {
+          "title": "BasketCreateRequest",
+          "type": "object",
+          "description": "",
+          "x-examples": {
+            "Empty Basket Every Minute": {
+              "name": "Flush Every Minute",
+              "description": "Empties basket every minute",
+              "timeout": 60
+            }
+          },
+          "properties": {
+            "timeout": {
+              "type": "integer",
+              "description": "The time until which the orders will be batched. After this timeout, all orders in the Basket will be sent to Market. The timeout value is given in seconds."
+            },
+            "name": {
+              "type": "string",
+              "description": "An easy to remember name for this Basket"
+            },
+            "description": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "timeout",
+            "name"
+          ]
+        },
+        "BasketUpdateRequest": {
+          "title": "BasketUpdateRequest",
+          "type": "object",
+          "description": "",
+          "x-examples": {
+            "Empty Basket Every Minute": {
+              "name": "Flush Every Minute",
+              "description": "Empties basket every minute",
+              "timeout": 60
+            }
+          },
+          "properties": {
+            "timeout": {
+              "type": "integer",
+              "description": "The time until which the orders will be batched. After this timeout, all orders in the Basket will be sent to Market. The timeout value is given in seconds."
+            },
+            "name": {
+              "type": "string",
+              "description": "An easy to remember name for this Basket"
+            },
+            "description": {
+              "type": "string"
+            },
+            "basketID": {
+              "type": "string",
+              "description": "The basketID of the Basket to be updated."
+            }
+          },
+          "required": [
+            "basketID"
+          ]
+        }
+      },
+      "requestBodies": {},
+      "parameters": {}
+    }
+  }

@@ -1,5 +1,5 @@
 {
-  "app": "node bin/dwchatbot.js",
+  "app": "node bin/transfers.js",
   "watch": {
     "include": [
       "**"

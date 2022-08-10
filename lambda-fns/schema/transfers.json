@@ -1,0 +1,379 @@
+{
+  "openapi": "3.0.0",
+  "x-stoplight": {
+    "id": "iuyjqy6vp8tr7"
+  },
+  "info": {
+    "title": "transfers",
+    "version": "1.0",
+    "description": "Transactions let you move shares or cash between accounts"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/transfers/{transferID}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "transferID",
+          "in": "path",
+          "required": true,
+          "description": "The unique id of the transaction"
+        }
+      ],
+      "get": {
+        "summary": "Retrieve a Transfer",
+        "operationId": "get-transfers-transferID",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transfer"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transfer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Retreive a transfer by ID."
+      }
+    },
+    "/transfers": {
+      "post": {
+        "summary": "Create New Transfer",
+        "operationId": "post-transfer",
+        "responses": {
+          "200": {
+            "description": "Transfer Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transfer"
+                },
+                "examples": {
+                  "example-1": {
+                    "value": {
+                      "accountFrom": "foo",
+                      "accountTo": "bar",
+                      "shares": [
+                        {
+                          "symbol": "aapl",
+                          "quantity": 10
+                        }
+                      ],
+                      "comment": "This is a transfer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing Required Information"
+          },
+          "409": {
+            "description": "Email Already Taken"
+          }
+        },
+        "description": "Create a new transfer.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferRequest"
+              },
+              "examples": {
+                "Transfer Shares Minimal": {
+                  "value": {
+                    "accountFrom": "DW0000001",
+                    "accountTo": "DW0000002",
+                    "shares": [
+                      {
+                        "symbol": "AAPL",
+                        "quantity": 5
+                      }
+                    ],
+                    "comment": "Daily Sweep"
+                  }
+                },
+                "Transfer Shares Batched (Rewards)": {
+                  "value": {
+                    "accountFrom": "DW0000001",
+                    "accountTo": "DW0000002",
+                    "shares": [
+                      {
+                        "symbol": "AAPL",
+                        "quantity": 1
+                      },
+                      {
+                        "symbol": "PYPL",
+                        "quantity": 2
+                      }
+                    ],
+                    "comment": "Reward for purchase",
+                    "shareTransferPlan": {
+                      "basketID": "e7c20917-c183-423b-acc8-c5c0d0de44da"
+                    },
+                    "metadata": {
+                      "anyKey": "anyValue"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": []
+    }
+  },
+  "components": {
+    "schemas": {
+      "Transfer": {
+        "title": "Transfer",
+        "type": "object",
+        "description": "Represents a transfer of shares or cash between accounts.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "accountFrom": {
+            "type": "string",
+            "description": "Unique identifier for the given user."
+          },
+          "accountTo": {
+            "type": "string"
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number"
+                },
+                "orderID": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol",
+                "quantity"
+              ]
+            }
+          },
+          "basketID": {
+            "type": "string",
+            "description": "The ID of the Basket resource. Required if you are "
+          },
+          "comment": {
+            "type": "string"
+          },
+          "cash": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "accountFrom",
+          "accountTo",
+          "shares"
+        ]
+      },
+      "TransferRequest": {
+        "title": "TransferRequest",
+        "x-stoplight": {
+          "id": "ixnmaj755rt4k"
+        },
+        "type": "object",
+        "x-examples": {
+          "Transfer Shares and Cash Minimal": {
+            "accountFrom": "DWBG000001",
+            "accountTo": "DWBG000002",
+            "shares": [
+              {
+                "symbol": "PYPL",
+                "quantity": 10
+              }
+            ],
+            "cash": [
+              {
+                "amount": 100
+              }
+            ],
+            "comment": "Sweep transfer"
+          },
+          "Move Shares": {
+            "accountFrom": "DWBG000001",
+            "accountTo": "DWBG000002",
+            "shares": [
+              {
+                "symbol": "AAPL",
+                "quantity": 10
+              }
+            ],
+            "shareTransferPlan": {
+              "buyIfRequired": true
+            },
+            "comment": "Daily sweep transfer"
+          }
+        },
+        "description": "A request to transfer cash or shares to an account.",
+        "properties": {
+          "accountFrom": {
+            "type": "string",
+            "description": "The account number of the Account from who shares/cash have to be moved."
+          },
+          "accountTo": {
+            "type": "string",
+            "description": "The account number of receiving Account."
+          },
+          "shares": {
+            "type": "array",
+            "description": "An array of shares that have to me transfered.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Symbol of the share."
+                },
+                "quantity": {
+                  "type": "number",
+                  "description": "Quantity of shares to be transfered"
+                },
+                "averagePrice": {
+                  "type": "number",
+                  "description": "Cost Basis for the receiver. Required if moveTaxSlots is FALSE."
+                },
+                "accountingMethodology": {
+                  "type": "string",
+                  "description": "Method to calculate Cost Basis for receiver. Required if moveTaxSlots is FALSE and receiverCostBasis is not present",
+                  "enum": [
+                    "LIFO",
+                    "FIFO"
+                  ],
+                  "example": "LIFO",
+                  "default": "FIFO"
+                }
+              },
+              "required": [
+                "symbol",
+                "quantity"
+              ]
+            }
+          },
+          "cash": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "amount"
+              ]
+            }
+          },
+          "comment": {
+            "type": "string",
+            "description": "A human readable comment for this transfer."
+          },
+          "shareTransferPlan": {
+            "$ref": "#/components/schemas/SharesTransferPlan"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Any arbitrary Key Value Pairs that you would like to associate with this transfer."
+          }
+        },
+        "required": [
+          "accountFrom",
+          "accountTo",
+          "comment"
+        ]
+      },
+      "SharesTransferPlan": {
+        "title": "SharesTransferPlan",
+        "x-stoplight": {
+          "id": "p48xz6bzoy6kj"
+        },
+        "type": "object",
+        "description": "Describes the ",
+        "x-examples": {
+          "example-1": {
+            "basketID": "B0000001",
+            "accountingMethodology": "LIFO"
+          }
+        },
+        "properties": {
+          "basketID": {
+            "type": "string",
+            "description": "An associated Basket's BasketID. This transfer will be batched and executed according the rules of the Basket."
+          }
+        },
+        "required": [
+          "basketID"
+        ]
+      },
+      "Basket": {
+        "title": "Basket",
+        "x-stoplight": {
+          "id": "ofcpo1fc08er0"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "flushTimeout": {
+            "type": "string",
+            "enum": [
+              "1MIN",
+              "10MINS",
+              "1HR",
+              "2HRS"
+            ],
+            "example": "10MINS",
+            "default": "1MIN"
+          },
+          "maxBaskeValue": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0,
+            "default": 10000,
+            "example": 1000
+          }
+        }
+      }
+    },
+    "requestBodies": {}
+  }
+}
