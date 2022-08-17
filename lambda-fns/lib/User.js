@@ -140,6 +140,17 @@ const User = () => {
         },
       };
       const data = await docClient.query(params).promise();
+
+      if (!data.Items.length) {
+        return null;
+      }
+      const session = data.Items[0];
+      const hasSessionExpired = moment(session.loginWhen).add(12, 'hours').isBefore(Date.now());
+      
+      if (hasSessionExpired) {
+        return null;
+      }
+
       // console.log(data, "<<< Success");
       return data.Items[0];
     },

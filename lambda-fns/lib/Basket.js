@@ -82,6 +82,20 @@ const Basket = () => {
         return null;
       }
     },
+    async deleteBasket(basketID) {
+      try {
+        const docClient = new AWS.DynamoDB.DocumentClient();
+        let params = {
+          TableName: table,
+          Key: { id: basketID },
+        };
+        console.log('Deleting basket', params);
+        await docClient.delete(params).promise();
+      } catch (error) {
+        console.error(error, "<<< Failed to delete the basket", basketID);
+        return null;
+      }
+    },
   };
 };
 module.exports = Basket;

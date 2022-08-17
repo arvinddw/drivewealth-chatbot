@@ -1,5 +1,5 @@
 const Stomp = require("stomp-client");
-const defaultDestination = 'dw.order.request';
+const defaultDestination = "dw.order.request";
 
 const Route = {
   accountIDToQueueName(
@@ -50,8 +50,6 @@ const defaultOptions = {
 };
 
 const AMQClient = ({ host, port, username, password } = defaultOptions) => {
-
-
   var client = new Stomp(host, port, username, password);
 
   return {
@@ -59,7 +57,9 @@ const AMQClient = ({ host, port, username, password } = defaultOptions) => {
       await new Promise((res, rej) => {
         client.connect(
           function (sessionId) {
-            console.log(`AMQ: Connected with session id ${sessionId} to ${host}`);
+            console.log(
+              `AMQ: Connected with session id ${sessionId} to ${host}`
+            );
             return res(sessionId);
           },
           function (err) {
@@ -71,43 +71,58 @@ const AMQClient = ({ host, port, username, password } = defaultOptions) => {
     },
     async sendMessageToQueue(
       messageStr,
-      { accountID, accountNo, defaultQueueName }
+      { accountID, accountNo, defaultQueueName },
+      headers = {}
     ) {
       const queueName = Route.accountIDToQueueName(
         accountID,
         accountNo,
         defaultQueueName
       );
-      console.log(queueName, '<<<< queueName')
-      client.publish(`/queue/${queueName}`, messageStr);
+      console.log(queueName, "<<<< queueName");
+      client.publish(`/queue/${queueName}`, messageStr, {
+        ...headers,
+        'amq-msg-type': 'text',
+      });
       console.log("AMQ: Message sent");
     },
-    async sendMessageToBasketQueue(
-      messageStr,
-      basketID,
-    ) {
-      client.publish(`/queue/baskets/${basketID}`, messageStr);
+    async sendMessageToBasketQueue(messageStr, basketID, headers = {}) {
+      client.publish(`/queue/baskets/${basketID}`, messageStr, {
+        ...headers,
+        'amq-msg-type': 'text',
+      });
       console.log(`AMQ: Message sent to known basket queue: ${basketID}`);
     },
-    async readAllMessagesInBasketQueue(
-      basketID,
-    ) {
+    async sendMessageToNamedQueue(messageStr, queueName, headers = {}) {
+      client.publish(`/queue/${queueName}`, messageStr, {
+        ...headers,
+        'amq-msg-type': 'text',
+        persistent: true,
+        ttl: 0,
+      });
+      console.log(`AMQ: Message sent to queue: ${queueName}`);
+    },
+    async readAllMessagesInBasketQueue(basketID) {
       const messages = [];
       client.subscribe(`/queue/baskets/${basketID}`, (body, headers) => {
-        messages.push(JSON.parse(body))
-      })
+        messages.push(JSON.parse(body));
+      });
       // ASSUMPTION: Read messages for 3 seconds. Should be able to flush out the Queue by then.
       await new Promise((res) => setTimeout(res, 3000));
-      console.log(`AMQ: ${messages.length} messages read from basket queue: ${basketID}`);
-      return messages
+      console.log(
+        `AMQ: ${messages.length} messages read from basket queue: ${basketID}`
+      );
+      return messages;
     },
+    subscribe: (destination, listener) => client.subscribe(destination, listener),
     async disconnect() {
       return new Promise((res) => {
         client.disconnect(res);
         console.log("AMQ: Disconnected");
-      })
+      });
     },
   };
 };
 
 module.exports = AMQClient;
+// JMSXMessageCounter

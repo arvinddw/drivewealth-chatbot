@@ -8,6 +8,7 @@ const InstrumentCache = require("./lib/InstrumentCache");
 const User = require("./lib/User");
 const Account = require("./lib/Account");
 const Basket = require("./lib/Basket");
+const { DEFAULT_API_RESPONSE } = require("./lib/util");
 
 AWS.config.update({ region: "us-east-1" });
 
@@ -32,6 +33,7 @@ const transferShare = async ({ fromAccount, toAccount, share, comment }) => {
   const instrument = await instrumentCache.getInstrument(symbol);
   if (!instrument || !instrument.instrumentID) {
     return {
+      ...DEFAULT_API_RESPONSE,
       statusCode: 400,
       body: JSON.stringify({ message: "The given symbol was not found" }),
       isBase64Encoded: false,
@@ -81,9 +83,12 @@ const batchAndTransferShare = async ({ fromAccount, toAccount, share, comment, b
   
   const amqMessage = {
     mt: 9819, // JOSHUA_BATCH_SHARE_TRANSFER
+    userID: fromAccount.userID,
     accountID: fromAccount.accountID,
     fromAccountID: fromAccount.accountID,
+    fromAccountNo: fromAccount.accountNo,
     toAccountID: toAccount.accountID,
+    toAccountNo: toAccount.accountNo,
     symbol,
     quantity,
     execStrategy,
@@ -125,20 +130,20 @@ exports.handler = async (event, context) => {
 
     if (!basket) {
       return {
+        ...DEFAULT_API_RESPONSE,
         statusCode: 400,
         body: JSON.stringify({
           message: 'Invalid basketID',
         }),
-        isBase64Encoded: false,
       };
     }
     if (basket.clientAppId !== principalId) {
       return {
+        ...DEFAULT_API_RESPONSE,
         statusCode: 400,
         body: JSON.stringify({
           message: 'Invalid clientID',
         }),
-        isBase64Encoded: false,
       };
     }
     isBatched = true;
@@ -146,6 +151,26 @@ exports.handler = async (event, context) => {
   // Read users
   const fromAccount = await getAccount(accountFrom);
   const toAccount = await getAccount(accountTo);
+
+  if (!fromAccount) {
+    return {
+      ...DEFAULT_API_RESPONSE,
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'The fromAccount is invalid or does not exist',
+      }),
+    };
+  }
+
+  if (!toAccount) {
+    return {
+      ...DEFAULT_API_RESPONSE,
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'The toAccount is invalid or does not exist',
+      }),
+    };
+  }
 
   const fromUser = await getUser(fromAccount.userID);
 
@@ -168,10 +193,9 @@ exports.handler = async (event, context) => {
     }
   }
   return {
-    statusCode: 200,
+    ...DEFAULT_API_RESPONSE,
     body: JSON.stringify({
       message: isBatched ? "Shares added to basket for transfer" : "Shares transfered",
     }),
-    isBase64Encoded: false,
-  };
+  }
 };

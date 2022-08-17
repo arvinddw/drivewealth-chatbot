@@ -5,18 +5,17 @@ const { v4: uuid } = require("uuid");
 const Ajv = require("ajv");
 const TransferSchema = require("./schema/baskets.json");
 const Basket = require("./lib/Basket");
+const { DEFAULT_API_RESPONSE } = require("./lib/util");
 
 AWS.config.update({ region: "us-east-1" });
 const ajv = new Ajv({ strict: false, allErrors: true });
 const schema = ajv.addSchema(TransferSchema);
 
-const { createBasket, listUserBaskets } = Basket();
-// const { getAccount } = Account();
-
+const { createBasket, getBasket, deleteBasket, listUserBaskets } = Basket();
 const cwevents = new AWS.CloudWatchEvents();
 
-const createOrUpdateScheduler = async ({ basketID, name, timeout }) => {
-  const uniqueBasketName = `BK-${name}-${basketID}`;
+const createOrUpdateScheduler = async ({ basketID, timeout }) => {
+  const uniqueBasketName = `BK-${basketID}`;
   const ruleName = `RL-${uniqueBasketName}`;
 
   await cwevents
@@ -48,16 +47,78 @@ const createOrUpdateScheduler = async ({ basketID, name, timeout }) => {
   };
 };
 
+const deleteScheduler = async ({ basketID }) => {
+  const uniqueBasketName = `BK-${basketID}`;
+  const ruleName = `RL-${uniqueBasketName}`;
+
+  console.log('Deleting rule', ruleName)
+  await cwevents.deleteRule({
+    Name: ruleName
+  }).promise();  
+};
+
 const handleGetBaskets = async (event) => {
   const { userID, principalId } = event.requestContext.authorizer;
-  console.log(userID, "<<<<<");
-  const baskets = await listUserBaskets(userID);
-  console.log(baskets);
-  return {
-    statusCode: 200,
-    body: JSON.stringify(baskets),
-    isBase64Encoded: false,
-  };
+  if (event.pathParameters) {
+    const { basketID } = event.pathParameters;
+    const basket = await getBasket(basketID);
+    return {
+      ...DEFAULT_API_RESPONSE,
+      body: JSON.stringify(basket),
+    }
+  } else {
+    const baskets = await listUserBaskets(userID);
+    return {
+      ...DEFAULT_API_RESPONSE,
+      body: JSON.stringify(baskets),
+    }  
+  }  
+};
+
+const handleDeleteBasket = async (event) => {
+  const { userID, principalId } = event.requestContext.authorizer;
+
+  if (!event.pathParameters) {
+    return {
+      ...DEFAULT_API_RESPONSE,
+      statusCode: 404,
+    }
+  }
+  
+  if (event.pathParameters) {
+    const { basketID } = event.pathParameters;
+    const basket = await getBasket(basketID);
+    if (basket.userID !== userID) {
+      return {
+        ...DEFAULT_API_RESPONSE,
+        statusCode: 400,
+        body: JSON.stringify({
+          message: 'Invalid basketID'
+        }),
+      }  
+    }
+    const result = await deleteBasket(basketID)
+
+    console.log(result, '<<< result')
+    if(result === null) {
+      return {
+        ...DEFAULT_API_RESPONSE,
+        statusCode: 500,
+        body: JSON.stringify({
+          message: 'Internal Error'
+        }),
+      }  
+    }
+    // Delete the scheduler
+    console.log('Deleting scheduler')
+    await deleteScheduler({basketID});
+    return {
+      ...DEFAULT_API_RESPONSE,
+      body: JSON.stringify({
+        message: 'Basket Deleted'
+      }),
+    }
+  }
 };
 
 const handlePostBaskets = async (event) => {
@@ -70,10 +131,10 @@ const handlePostBaskets = async (event) => {
 
   if (!validationResult) {
     return {
+      ...DEFAULT_API_RESPONSE,
       statusCode: 400,
       body: JSON.stringify(validateBasketCreate.errors),
-      isBase64Encoded: false,
-    };
+    }
   }
 
   console.log("Creating basket record");
@@ -92,25 +153,26 @@ const handlePostBaskets = async (event) => {
   });
 
   return {
-    statusCode: 200,
+    ...DEFAULT_API_RESPONSE,
     body: JSON.stringify({
       basket: {
         basketID,
       },
       message: "Basket created/updated",
     }),
-    isBase64Encoded: false,
-  };
+  }
 };
 
 exports.handler = async (event, context) => {
-  console.log(event, "<<<");
   switch (event.httpMethod) {
     case "GET": {
       return await handleGetBaskets(event);
     }
     case "POST": {
       return await handlePostBaskets(event);
+    }
+    case "DELETE": {
+      return await handleDeleteBasket(event);
     }
     default: {
       return await handleGetBaskets(event);
