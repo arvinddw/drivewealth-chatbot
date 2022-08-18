@@ -1,5 +1,6 @@
 const Stomp = require("stomp-client");
 const defaultDestination = "dw.order.request";
+const url = require('url');
 
 const Route = {
   accountIDToQueueName(
@@ -44,10 +45,13 @@ const Route = {
 };
 
 const defaultOptions = {
-  host: "10.175.1.227",
+  // host: process.env.AMQ_URL || "10.175.1.227",
+  host: process.env.AMQ_IP_ADDRESS,
   // host: "localhost",
   port: 61613,
 };
+
+console.log('Default options');
 
 const AMQClient = ({ host, port, username, password } = defaultOptions) => {
   var client = new Stomp(host, port, username, password);

@@ -11,12 +11,14 @@
     "tail:processor": "aws logs tail '/aws/lambda/OrderProcessor' --follow",
     "tail:api": "aws logs tail '/aws/lambda/NodeAPIStack-APILambda7D19CDDA-aAZGw1dd0PfK' --follow",
     "tail:auth": "aws logs tail '/aws/lambda/NodeAPIStack-Authenticator1891FE49-Sd8eiSlbobNc' --follow",
-    "tail:baskets": "aws logs tail '/aws/lambda/NodeAPIStack-APIBasketsLambda2CAE62CA-B1K8LTJg1wAC' --follow",    
+    "tail:baskets": "aws logs tail '/aws/lambda/NodeAPIStack-APIBasketsLambda2CAE62CA-B1K8LTJg1wAC' --follow",
     "listen": "aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/080513178138/dwNotifications --attribute-names All --message-attribute-names All --max-number-of-messages 2"
   },
   "devDependencies": {
     "aws-cdk": "2.26.0",
-    "jest": "^27.5.1"
+    "aws-sdk": "^2.1072.0",
+    "jest": "^27.5.1",
+    "properties-parser": "^0.3.1"
   },
   "dependencies": {
     "@aws-cdk/aws-apigateway": "^1.132.0",

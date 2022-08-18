@@ -73,3 +73,38 @@ exports.handler = async (event, context) => {
     isBase64Encoded: false,
   };
 };
+
+// const amqClient = AMQClient();
+// amqClient
+//   .connect()
+//   // .then(() => {
+//   //   amqClient.subscribe(`/queue/dw.bo.request`, function(body, headers) {
+//   //     console.log('This is the body of a message on the subscribed queue:', body);
+//   //   });
+//   // })
+//   .then(() => {
+//     return amqClient.sendMessageToNamedQueue(
+//       JSON.stringify({
+//         mt: "4532",
+//         sessionKey: `d7078149-4643-476c-b355-4a2ccb6bce4c.2022-08-16T20:05:01.998Z`,
+//         userID: "d7078149-4643-476c-b355-4a2ccb6bce4c",
+//         accountNo: "DWBG000083",
+//         ordType: "1",
+//         symbol: "STIP",
+//         quantity: 2,
+//         side: "B",
+//         limitPx: "0",
+//         stopPx: "0",
+//         comment: "Test order babe",
+//         correlationID: Date.now(),
+//         replyTo: 'queue://mys.use1b-hab01.usersession'
+        
+//       }),
+//       "dw.bo.request",
+//       {
+//         'amq-msg-type': 'text',
+//       }
+//     );
+//   })
+//   .then(() => console.log('Sent'))
+//   .catch(console.error);

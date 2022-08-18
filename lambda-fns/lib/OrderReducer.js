@@ -29,10 +29,6 @@ module.exports = (messages) => {
     // Group messages by Symbol to create orders.
     getOrders() {
       const orders = _.values(messages).reduce((orders, message) => {
-        // let {         
-        //   fromAccountID,
-        // } = message;
-
         if (!orders[message.symbol]) {
           orders[message.symbol] = {
             mt: "4532",
@@ -54,7 +50,6 @@ module.exports = (messages) => {
         orders[message.symbol].quantity = numeral(
           orders[message.symbol].quantity
         ).add(message.quantity).value();
-        
         
         return orders;
       }, {});
