@@ -1,6 +1,5 @@
 const Stomp = require("stomp-client");
 const defaultDestination = "dw.order.request";
-const url = require('url');
 
 const Route = {
   accountIDToQueueName(
@@ -27,11 +26,15 @@ const Route = {
         );
       }
 
-      console.log(me + "routing to joshua is turned off, sending to default.");
-      //return defaultDestination;
+      // [TODO] Need to check FT joshua-route-data-to-joshua and add Zones. Just return prefix for now.
+      const prefix = accountID.substr(0, 1);
+      return `dw.joshua.${prefix}`;
+      
+      // console.log(me + "routing to joshua is turned off, sending to default.");
+      // //return defaultDestination;
 
-      if (passedDefaultDestination != null) return passedDefaultDestination;
-      else return defaultDestination; // this will warn me in uat before production (I hope).
+      // if (passedDefaultDestination != null) return passedDefaultDestination;
+      // else return defaultDestination; // this will warn me in uat before production (I hope).
     } catch (e) {
       console.error(`${accountID} ERROR Exception [ ${e.message} ]`);
       console.error(e);

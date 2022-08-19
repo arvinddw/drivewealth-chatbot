@@ -46,9 +46,9 @@ exports.handler = async (event, context) => {
 
   const messages = await amqClient.readAllMessagesInBasketQueue(basketID);
   console.log(messages, "<<< messages read from basket");
-  const orders = OrderReducer(messages).getOrders();
+  const orders = OrderReducer.getOrders(messages);
 
-  for (order of orders) {
+  for (let order of orders) {
     console.log(`Order request to AMQ: ${order}`);
     // await amqClient.sendMessageToQueue(JSON.stringify(order), {
     //   accountID: order.userID,
@@ -59,12 +59,30 @@ exports.handler = async (event, context) => {
       "dw.bo.request"
     );
   }
-
-  await amqClient.disconnect();
-  console.log("Processor disconnected from ActiveMQ");
-
-  // Always wait for 5 seconds before killing lambda.
+  // [Hack] Wait for 5 seconds for all the sends to go through. 
+  // Ideally sending messages should be async.
   await new Promise((res, rej) => setTimeout(res, 5000));
+
+  // Figure who has to get paid how much
+  const payouts = OrderReducer.getPayouts(messages);
+
+  console.log(payouts, '<<< Payouts')
+
+  for (let payout of payouts) {
+    await amqClient.sendMessageToQueue(JSON.stringify(payout), {
+      accountID: payout.fromAccountID,
+      accountNo: payout.fromAccountNo,
+    })
+  }
+
+  console.log(`${payouts.length} payouts completed.`)
+  
+  await amqClient.disconnect();
+
+  console.log("Processor disconnected from ActiveMQ");
+  
+  await new Promise((res, rej) => setTimeout(res, 2000));
+
   return {
     statusCode: 200,
     body: JSON.stringify({

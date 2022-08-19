@@ -1,6 +1,7 @@
 const _ = require("lodash");
 const numeral = require("numeral");
-const moment = require('moment')
+const moment = require("moment");
+const {v4: uuid} = require('uuid');
 
 /*
   MESSAGE Example
@@ -23,38 +24,68 @@ const moment = require('moment')
 
   */
 
+module.exports = {
+  // Group messages by Symbol to create orders.
+  getOrders(messages) {
+    const orders = _.values(messages).reduce((orders, message) => {
+      if (!orders[message.symbol]) {
+        orders[message.symbol] = {
+          mt: "4532",
+          sessionKey: `${message.userID}.${moment().format(
+            "YYYY-MM-DDTHH:mm:ss.SSS[Z]"
+          )}`,
+          userID: message.userID,
+          accountNo: message.fromAccountNo,
+          ordType: "1",
+          symbol: message.symbol,
+          quantity: 0,
+          side: "B",
+          limitPx: "0",
+          stopPx: "0",
+          comment: "Consolidated order",
+          // memo,
+          correlationID: Date.now(),
+        };
+      }
 
-module.exports = (messages) => {
-  return {
-    // Group messages by Symbol to create orders.
-    getOrders() {
-      const orders = _.values(messages).reduce((orders, message) => {
-        if (!orders[message.symbol]) {
-          orders[message.symbol] = {
-            mt: "4532",
-            sessionKey: `${message.userID}.${moment().format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")}`,
-            userID: message.userID,
-            accountNo: message.fromAccountNo,
-            ordType: "1",
-            symbol: message.symbol,
-            quantity: 0,
-            side: "B",
-            limitPx: "0",
-            stopPx: "0",
-            comment: "Consolidated order",
-            // memo,
-            correlationID: Date.now(),
-          };
-        }   
-        
-        orders[message.symbol].quantity = numeral(
-          orders[message.symbol].quantity
-        ).add(message.quantity).value();
-        
-        return orders;
-      }, {});
+      orders[message.symbol].quantity = numeral(orders[message.symbol].quantity)
+        .add(message.quantity)
+        .value();
 
-      return _.values(orders);
-    },
-  };
+      return orders;
+    }, {});
+
+    return _.values(orders);
+  },
+  getPayouts(messages) {
+    let groupedByUserSymbol = messages.reduce((acc, message) => {
+      let key = `${message.toAccountID}.${message.symbol}`
+      if (!acc[key]) {
+        acc[key] = {
+          mt: "9818", // JOSHUA_BATCH_SHARE_TRANSFER
+          userID: message.userID,
+          accountID: message.accountID,
+          fromAccountID: message.fromAccountID,
+          fromAccountNo: message.fromAccountNo,
+          toAccountID: message.toAccountID,
+          toAccountNo: message.toAccountNo,
+          symbol: message.symbol,
+          quantity: 0,
+          execStrategy: 'FIFO',
+          ibID: message.ibID,
+          id: uuid(),
+          instrumentID: message.instrumentID,
+          exchangeID: message.exchangeID,
+          // cusip: message.cusip,
+          // transferID,
+          comment: message.comment,
+        };
+      }
+      // console.log(acc)
+      acc[key].quantity = numeral(acc[key].quantity).add(message.quantity).value()
+      return acc
+    }, {});
+    return _.values(groupedByUserSymbol);
+
+  },
 };
