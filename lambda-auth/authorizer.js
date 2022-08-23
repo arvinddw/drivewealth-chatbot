@@ -1,6 +1,6 @@
 
 exports.handler = async (event) => {
-    console.log(`event >`, JSON.stringify(event, null, 2))
+    console.log(`event: `, JSON.stringify(event, null, 2))
     const {
         authorizationToken,
         requestContext: { apiId, accountId },
